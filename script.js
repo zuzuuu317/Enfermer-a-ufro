@@ -61,8 +61,19 @@ function crearMalla() {
       const divRamo = document.createElement("div");
       divRamo.textContent = ramo.nombre;
       divRamo.classList.add("ramo");
-      if (!estadoRamos[ramo.nombre]) divRamo.classList.add("bloqueado");
+      divRamo.setAttribute("id", ramo.nombre);
 
+      // Estado inicial
+      if (estadoRamos[ramo.nombre]) {
+        divRamo.classList.add("aprobado");
+      } else if (esRamoInicial(ramo.nombre)) {
+        // Primer semestre o sin requisitos
+        divRamo.classList.remove("bloqueado");
+      } else {
+        divRamo.classList.add("bloqueado");
+      }
+
+      // Evento de clic
       divRamo.onclick = () => {
         if (divRamo.classList.contains("bloqueado")) return;
 
@@ -75,17 +86,19 @@ function crearMalla() {
         guardarEstado();
       };
 
-      divRamo.setAttribute("id", ramo.nombre);
-      malla.appendChild(divSemestre);
       divSemestre.appendChild(divRamo);
     });
+
+    malla.appendChild(divSemestre);
   }
 }
 
 function desbloquear(nombres) {
   nombres.forEach(nombre => {
     const div = document.getElementById(nombre);
-    if (div) div.classList.remove("bloqueado");
+    if (div) {
+      div.classList.remove("bloqueado");
+    }
   });
 }
 
@@ -120,6 +133,19 @@ function aplicarEstado() {
   }
 }
 
+// Detecta si un ramo no tiene requisitos (caso inicial)
+function esRamoInicial(nombre) {
+  for (const [, ramos] of Object.entries(estructura)) {
+    for (const ramo of ramos) {
+      if (ramo.dependientes.includes(nombre)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Reiniciar todo
 btnReiniciar.onclick = () => {
   if (confirm("¿Seguro que quieres reiniciar todo el progreso?")) {
     localStorage.removeItem("estadoRamos");
@@ -127,7 +153,7 @@ btnReiniciar.onclick = () => {
   }
 };
 
-// Inicializa
+// Inicializar
 cargarEstado();
 crearMalla();
 aplicarEstado();
